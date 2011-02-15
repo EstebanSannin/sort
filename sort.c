@@ -10,9 +10,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+#include <unistd.h>
 
 #define MAX 100
-
+#define BUF 1024
 typedef struct st_ex { 
 	char *string_order;
 	char *full_string;
@@ -20,6 +22,7 @@ typedef struct st_ex {
 
 char *get_order_string(char *, char *, int, int);
 void print_Structs(Structs *filemap, int filemap_len);
+
 /* qsort struct comparision function */
 int struct_cmp_reverse(const void *a, const void *b){
 	Structs *ia = (Structs *)a;
@@ -83,7 +86,8 @@ void usage(void){
 			"-t select the start and the end token to sort: -t2,3\n"
 			"-v verbose mode\n"
 			"-r reverse mode\n"
-			"-n numeric mode\n");
+			"-n numeric mode\n"
+			"-h this message\n");
 }
 
 
@@ -91,38 +95,75 @@ void usage(void){
 /* MAIN program */ 
 int main(int argc, char **argv) 
 { 	
-	if(argc<3 || argc>5){
+	
+	char line[BUF];			//for reading line 
+	char **strarray = NULL;		//for full line file
+	Structs *full_file;		//struct for file
+	int i;				//counter
+	int strcount = 0;		//number of line
+
+	int start = 0; 			
+	int end = 0;
+	char *separator = NULL;		//separator character
+	int c;
+	int index;
+
+	/*flags*/
+	int tflag = 0;
+	int kflag = 0;
+	int vflag = 0;
+	int rflag = 0;
+	int hflag = 0;
+	int nflag = 0;
+	opterr = 0;	
+	while((c = getopt(argc, argv, "t:k:vrnh")) != -1){
+		switch(c){
+			case 't':
+				start = atoi(strtok(optarg, ","));
+				end = atoi(strtok(NULL, ","));
+				tflag = 1;
+				break;
+			case 'k':
+				kflag = 1;
+				separator = optarg;
+				break;
+			case 'v':
+				vflag = 1;
+				break;
+			case 'r':
+				rflag = 1;
+				break;
+			case 'n':
+				nflag = 1;
+				break;
+			case 'h':
+				hflag = 1;
+				break;
+			case '?':
+				if(optopt == 't' || optopt == 'k')
+					fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+				else if(isprint(optopt)){
+					fprintf(stderr, "Unknown option `-%c'.\nTry 'sort -h' for usage message.\n", optopt);
+					
+				}
+				else
+					fprintf(stderr, "Unknown option character `\\x%x'.\n",optopt);
+				return 1;
+			default:
+				exit(1);
+		}
+	}
+	for(index = optind; index < argc; index++)
+		printf("Non-option argument %s\n", argv[index]);
+	/*if(tflag !=1 || kflag !=1){
+		printf("Requires -t and -k parameter!\n");
+		exit(1);
+	}*/
+	if(hflag){
 		usage();
-		exit(-1);
+		exit(1);
 	}
-	int start = 0, end = 0;
-	char *temp;
-	char *separator;
-	int verbose = 0;
-	int reverse = 0;
-	/* Read Argument*/
-	while (--argc > 0){
-		if(!(strncmp(argv[argc],"-t",2))){
-			temp = &argv[argc][2];
-			start = atoi(strtok(temp,","));
-			end = atoi(strtok(NULL,","));
-		}else if(!(strncmp(argv[argc],"-k",2))){
-			separator = &argv[argc][2];
-		}else if(!(strcmp(argv[argc],"-v"))){
-			verbose = 1;
-		}else if(!strcmp(argv[argc],"-r")){
-			reverse = 1;
-		}
-		else{
-			usage();
-			exit(-1);
-		}
-	}
-	char line[1024];	
-	char **strarray = NULL;
-	Structs *full_file;
-	int i;
-	int strcount = 0;  // number of line
+	
 	while((fgets(line, 1024, stdin)) != NULL) {
 		strarray = (char **)realloc(strarray, (strcount + 1) * sizeof(char *));
 		strarray[strcount++] = strdup(line);
@@ -133,8 +174,8 @@ int main(int argc, char **argv)
 		full_file[i].string_order = get_order_string(strdup(strarray[i]),separator,start,end);
 		full_file[i].full_string = strarray[i];
 	}
-	sort_structs(full_file,strcount,reverse);
-	if(verbose)
+	sort_structs(full_file,strcount,rflag);
+	if(vflag)
 		print_struct_array(full_file,strcount);
 	print_order_file(full_file,strcount);
 	return 0;
