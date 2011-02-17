@@ -39,7 +39,7 @@ int struct_cmp_by_number(const void *a, const void *b)
 	struct st_ex *ia = (struct st_ex *)a;
 	struct st_ex *ib = (struct st_ex *)b;
 	return (int)((atoi(ia->string_order)) - (atoi(ib->string_order)));
-	/* float comparison: returns negative if b > a 
+	/* int comparison: returns negative if b > a 
 	 * 	   and positive if a > b
 	 * */ 
 }
@@ -82,18 +82,7 @@ int struct_cmp(const void *a, const void *b)
 	   comparison function */
 }
 
-/*struct array printing function */ 
-void print_struct_array(struct st_ex *array, size_t len) 
-{ 
-	size_t i;
-
-	for(i=0; i<len; i++) 
-		printf("order string: %s \nfull string: %s\n", array[i].string_order, array[i].full_string);
-
-	puts("--");
-} 
-
-/* sorting structs using qsort() example */
+/* sorting structs using qsort() */
 
 void sort_structs(Structs *all, int len, int flag) 
 { 
@@ -114,6 +103,7 @@ void sort_structs_numeric(Structs *all, int len, int flag)
 
 } 
 
+/* Print array struct */
 void print_order_file(struct st_ex *array, size_t len) 
 { 
 	size_t i;
@@ -234,6 +224,7 @@ char *get_order_string(char *string, char *token, int start, int end){
 	int count = 0;
 	char *order_string=malloc(100 * sizeof(char *));
 	result = strtok(string,token);
+
 	while(result){
 		count++;
 		if(count >= start && count <= end){
@@ -242,7 +233,6 @@ char *get_order_string(char *string, char *token, int start, int end){
 		result = strtok(NULL,token);
 	}
 	return order_string;
-
 }
 
 
