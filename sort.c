@@ -36,8 +36,8 @@ int int_cmp(const void *a, const void *b)
 /* qsort struct comparision function */ 
 int struct_cmp_by_number(const void *a, const void *b) 
 { 
-	struct st_ex *ia = (struct st_ex *)a;
-	struct st_ex *ib = (struct st_ex *)b;
+	Structs *ia = (Structs *)a;
+	Structs *ib = (Structs *)b;
 	return (int)((atoi(ia->string_order)) - (atoi(ib->string_order)));
 	/* int comparison: returns negative if b > a 
 	 * 	   and positive if a > b
@@ -48,8 +48,8 @@ int struct_cmp_by_number(const void *a, const void *b)
 /* qsort struct comparision function */ 
 int struct_cmp_by_number_reverse(const void *a, const void *b) 
 { 
-	struct st_ex *ia = (struct st_ex *)a;
-	struct st_ex *ib = (struct st_ex *)b;
+	Structs *ia = (Structs *)a;
+	Structs *ib = (Structs *)b;
 	int number = ((atoi(ia->string_order)) - (atoi(ib->string_order)));
 	if(number < 0)
 		return 1;
