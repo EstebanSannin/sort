@@ -23,6 +23,45 @@ typedef struct st_ex {
 char *get_order_string(char *, char *, int, int);
 void print_Structs(Structs *filemap, int filemap_len);
 
+/* qsort int comparison function */ 
+int int_cmp(const void *a, const void *b) 
+{ 
+	const int *ia = (const int *)a; // casting pointer types 
+	const int *ib = (const int *)b;
+	return *ia  - *ib; 
+	/* integer comparison: returns negative if b > a 
+	 * 	   and positive if a > b */ 
+} 
+
+/* qsort struct comparision function */ 
+int struct_cmp_by_number(const void *a, const void *b) 
+{ 
+	struct st_ex *ia = (struct st_ex *)a;
+	struct st_ex *ib = (struct st_ex *)b;
+	return (int)((atoi(ia->string_order)) - (atoi(ib->string_order)));
+	/* float comparison: returns negative if b > a 
+	 * 	   and positive if a > b
+	 * */ 
+}
+
+
+/* qsort struct comparision function */ 
+int struct_cmp_by_number_reverse(const void *a, const void *b) 
+{ 
+	struct st_ex *ia = (struct st_ex *)a;
+	struct st_ex *ib = (struct st_ex *)b;
+	int number = ((atoi(ia->string_order)) - (atoi(ib->string_order)));
+	if(number < 0)
+		return 1;
+	else if(number > 0)
+		return -1;
+	/* float comparison: returns negative if b > a 
+	 * 	   and positive if a > b
+	 * */ 
+}
+
+
+
 /* qsort struct comparision function */
 int struct_cmp_reverse(const void *a, const void *b){
 	Structs *ia = (Structs *)a;
@@ -58,15 +97,21 @@ void print_struct_array(struct st_ex *array, size_t len)
 
 void sort_structs(Structs *all, int len, int flag) 
 { 
-	puts("*** Struct sorting ...");
 	// sort using comparision function 
 	if(flag)
 		qsort(all, len, sizeof(Structs), struct_cmp_reverse);
 	else
 		qsort(all, len, sizeof(Structs), struct_cmp);
-	
-	// print sorted struct array 
-	//print_struct_array(all, len);
+} 
+
+void sort_structs_numeric(Structs *all, int len, int flag) 
+{ 
+	// sort using comparision function 
+	if(flag)
+		qsort(all, len, sizeof(Structs), struct_cmp_by_number_reverse);
+	else
+		qsort(all, len, sizeof(Structs), struct_cmp_by_number);
+
 } 
 
 void print_order_file(struct st_ex *array, size_t len) 
@@ -75,7 +120,6 @@ void print_order_file(struct st_ex *array, size_t len)
 
 	for(i=0; i<len; i++) 
 		printf("%s", array[i].full_string);
-	//puts("--");
 } 
 
 void usage(void){
@@ -90,12 +134,10 @@ void usage(void){
 			"-h this message\n");
 }
 
-
-
 /* MAIN program */ 
 int main(int argc, char **argv) 
 { 	
-	
+
 	char line[BUF];			//for reading line 
 	char **strarray = NULL;		//for full line file
 	Structs *full_file;		//struct for file
@@ -144,7 +186,7 @@ int main(int argc, char **argv)
 					fprintf(stderr, "Option -%c requires an argument.\n", optopt);
 				else if(isprint(optopt)){
 					fprintf(stderr, "Unknown option `-%c'.\nTry 'sort -h' for usage message.\n", optopt);
-					
+
 				}
 				else
 					fprintf(stderr, "Unknown option character `\\x%x'.\n",optopt);
@@ -155,15 +197,15 @@ int main(int argc, char **argv)
 	}
 	for(index = optind; index < argc; index++)
 		printf("Non-option argument %s\n", argv[index]);
-	/*if(tflag !=1 || kflag !=1){
-		printf("Requires -t and -k parameter!\n");
+	if(tflag == 1 && kflag == 0){
+		printf("-r requires -k parameter\n");
 		exit(1);
-	}*/
+	}
 	if(hflag){
 		usage();
 		exit(1);
 	}
-	
+
 	while((fgets(line, 1024, stdin)) != NULL) {
 		strarray = (char **)realloc(strarray, (strcount + 1) * sizeof(char *));
 		strarray[strcount++] = strdup(line);
@@ -171,10 +213,16 @@ int main(int argc, char **argv)
 	}
 	full_file=malloc(strcount * sizeof(Structs));
 	for(i=0;i<strcount;i++){
-		full_file[i].string_order = get_order_string(strdup(strarray[i]),separator,start,end);
+		if(tflag == 0 || (tflag == 0 && kflag == 0))
+			full_file[i].string_order = strarray[i];
+		else
+			full_file[i].string_order = get_order_string(strdup(strarray[i]),separator,start,end);
 		full_file[i].full_string = strarray[i];
 	}
-	sort_structs(full_file,strcount,rflag);
+	if(nflag)
+		sort_structs_numeric(full_file,strcount,rflag);
+	else
+		sort_structs(full_file,strcount,rflag);
 	if(vflag)
 		print_struct_array(full_file,strcount);
 	print_order_file(full_file,strcount);
